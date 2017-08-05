@@ -2,6 +2,7 @@
 // Created by necator on 8/1/17.
 //
 
+#include <iostream>
 #include "chat_user.h"
 
 #include "chat_channel.h"

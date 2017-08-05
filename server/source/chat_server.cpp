@@ -2,6 +2,7 @@
 // Created by necator on 8/1/17.
 //
 
+#include <iostream>
 #include "chat_server.h"
 
 #include "chat_user.h"
@@ -31,7 +32,10 @@ void chat_server::do_accept() {
       return;
 
     if(!ec)
+    {
+      std::cout << "Accepted new connection\n";
       manager_.start(new_connection);
+    }
 
     do_accept();
   });
