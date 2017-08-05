@@ -20,7 +20,7 @@ class chat_server
 public:
   chat_server(boost::asio::io_service& io_service,
               const boost::asio::ip::tcp::endpoint& endpoint =
-              boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 6324));
+              boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 666));
 
   void start();
 

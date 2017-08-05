@@ -5,23 +5,23 @@
 #include "chat_client.h"
 
 #include <iostream>
-#include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
-#include <algorithm>
-#include <string>
 #include <thread>
 
-#include "message.h"
-
-int main()
+int main(int argc, char** argv)
 {
+  if(argc != 3) {
+    std::cout << "Usage: ./client <host> <port>\n";
+    return 1;
+  }
+
   try {
     std::cout << "Starting chat client...\n";
 
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);
 
-    auto endpoint_iterator = resolver.resolve({"necator.net", "6325"});
+    auto endpoint_iterator = resolver.resolve({argv[1], argv[2]});
 
     chat_client client(io_service, endpoint_iterator);
 
