@@ -29,8 +29,24 @@ void chat_user_manager::stop_all()
   connections_.clear();
 }
 
+chat_user_ptr chat_user_manager::user(const std::string& name) {
+    auto it = std::find_if(connections_.begin(), connections_.end(), [&name](chat_user_ptr usr) {
+        return usr->name() == name;
+    });
 
+    if(it != connections_.end())
+        return *it;
+    else
+        return nullptr;
+}
 
+bool chat_user_manager::user_exists(const std::string& name) const {
+    auto it = std::find_if(connections_.begin(), connections_.end(), [&name](chat_user_ptr usr){
+        return usr->name() == name;
+    });
+
+    return (it != connections_.end()) ? true : false;
+}
 
 
 

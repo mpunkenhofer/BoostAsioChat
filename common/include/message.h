@@ -15,6 +15,7 @@ public:
     enum class message_type {
         text,
         command,
+        status,
         unknown
     };
 

@@ -9,19 +9,25 @@
 
 #include "chat_user.h"
 
-class chat_user_manager
-{
+class chat_user_manager {
 public:
-  chat_user_manager();
+    chat_user_manager();
 
-  chat_user_manager(const chat_user_manager&) = delete;
-  chat_user_manager& operator=(const chat_user_manager&) = delete;
+    chat_user_manager(const chat_user_manager &) = delete;
 
-  void start(chat_user_ptr c);
-  void stop(chat_user_ptr c);
-  void stop_all();
+    chat_user_manager &operator=(const chat_user_manager &) = delete;
+
+    void start(chat_user_ptr c);
+
+    void stop(chat_user_ptr c);
+
+    void stop_all();
+
+    chat_user_ptr user(const std::string &name);
+
+    bool user_exists(const std::string& name) const;
 private:
-  std::set<chat_user_ptr> connections_;
+    std::set<chat_user_ptr> connections_;
 };
 
 

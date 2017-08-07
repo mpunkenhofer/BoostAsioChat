@@ -13,6 +13,8 @@
 
 #include "message.h"
 
+class chat_server;
+
 class chat_channel;
 
 class chat_user_manager;
@@ -24,7 +26,7 @@ public:
     //chat_user(const chat_user&) = delete;
     //chat_user& operator=(const chat_user&) = delete;
 
-    chat_user(boost::asio::io_service &, chat_user_manager &);
+    chat_user(boost::asio::io_service &, chat_server &, chat_user_manager &);
 
     void start();
 
@@ -34,15 +36,20 @@ public:
 
     std::string name(const std::string &n = std::string(""));
 
+    std::vector<std::string> joined_channels() const;
+    bool is_joined(chat_channel_ptr c);
+
     boost::asio::ip::tcp::socket &socket();
 
 private:
     boost::asio::io_service &io_service_;
     boost::asio::ip::tcp::socket socket_;
 
-    chat_user_manager &manager_;
+    chat_server& server_;
+    chat_user_manager& manager_;
 
     std::string name_;
+
     std::set<chat_channel_ptr> channels_;
 
     std::deque<message> write_msgs_;

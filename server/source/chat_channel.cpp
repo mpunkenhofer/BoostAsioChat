@@ -5,6 +5,8 @@
 #include <iostream>
 #include "chat_channel.h"
 
+#include "easylogging++.h"
+
 #include "chat_user.h"
 #include "chat_server.h"
 
@@ -12,10 +14,11 @@ chat_channel::chat_channel(chat_server &server, chat_user_manager &manager, cons
         server_(server),
         manager_(manager),
         name_(name) {
+    LOG(INFO) << "channel " << name_ << " is created.";
 }
 
 void chat_channel::publish(const message &msg) {
-    std::cout << "publish: " + msg.debug_string();
+    LOG(INFO) << "publish: " + msg.debug_string();
 
     for (auto u : users_)
         u->write(msg);
@@ -26,14 +29,22 @@ std::string chat_channel::name() const {
 }
 
 std::vector<std::string> chat_channel::user_names() const {
-    return std::vector<std::string>();
+    std::vector<std::string> ret;
+
+    std::transform(users_.begin(), users_.end(), std::back_inserter(ret), [](const chat_user_ptr u) {
+        return u->name();
+    });
+
+    return ret;
 }
 
 void chat_channel::join(chat_user_ptr c) {
+    LOG(INFO) << "user " << c->name() << " is joining " << name_;
     users_.insert(c);
 }
 
 void chat_channel::leave(chat_user_ptr c) {
+    LOG(INFO) << "user " << c->name() << " is leaving " << name_;
     users_.erase(c);
 
     if (users_.empty()) {
@@ -42,7 +53,11 @@ void chat_channel::leave(chat_user_ptr c) {
 }
 
 void chat_channel::leave_all() {
+    LOG(INFO) << name_ << " all users are forced to leave.";
+
     users_.clear();
+
+    server_.remove_channel(name_);
 }
 
 

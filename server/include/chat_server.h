@@ -26,10 +26,17 @@ public:
 
     const boost::asio::ip::tcp::endpoint endpoint() const;
 
-    void remove_channel(const std::string &id);
+    bool remove_channel(const std::string &id);
 
-    void create_channel(const std::string &id);
+    chat_channel_ptr create_channel(const std::string &id);
 
+    std::vector<std::string> channel_list() const;
+
+    chat_channel_ptr channel(const std::string& id);
+
+    void handle_message(const message& msg, chat_user_ptr user);
+
+    bool unused_id(const std::string& id) const;
 private:
     boost::asio::io_service &io_service_;
     boost::asio::ip::tcp::acceptor acceptor_;
@@ -39,6 +46,8 @@ private:
     std::map<std::string, chat_channel_ptr> channels_;
 
     void do_accept();
+
+    void do_command(const message &msg, chat_user_ptr user);
 };
 
 
