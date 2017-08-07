@@ -1,10 +1,17 @@
 language: cpp
 compiler: 
-  - gcc
+  - g++
 
 os: linux
 dist: trusty
 sudo: require
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+    packages:
+      - libboost1.55-all-dev
 
 script:
 - gcc -v && g++ -v && cmake --version
