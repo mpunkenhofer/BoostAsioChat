@@ -8,10 +8,11 @@ chat_user_manager::chat_user_manager()
 {
 
 }
+
 void chat_user_manager::start(chat_user_ptr c)
 {
-  connections_.insert(c);
-  c->start();
+    connections_.insert(c);
+    c->start();
 }
 
 void chat_user_manager::stop(chat_user_ptr c)

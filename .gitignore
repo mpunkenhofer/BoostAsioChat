@@ -33,3 +33,7 @@
 
 # CLion
 .idea*
+
+# Cmake
+cmake-build-debug/
+

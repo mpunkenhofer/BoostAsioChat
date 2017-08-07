@@ -7,30 +7,25 @@
 
 #include "chat_server.h"
 
-int main(int argc, char** argv)
-{
-  if(argc != 2) {
-    std::cout << "Usage: ./server <port>\n";
-    return 1;
-  }
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        std::cout << "Usage: ./Server <port>\n";
+        return 1;
+    }
 
-  try {
-    std::cout << "Starting chat server...\n";
+    try {
+        boost::asio::io_service io_service;
 
-    boost::asio::io_service io_service;
+        unsigned short port = static_cast<unsigned short>(std::atoi(argv[1]));
+        boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 
-    unsigned short port = static_cast<unsigned short>(std::atoi(argv[1]));
-    boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
+        chat_server server(io_service, endpoint);
 
-    chat_server server(io_service, endpoint);
+        server.start();
 
-    std::cout << "Chat server running and listing on port: " << server.endpoint().port() << "\n";
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
 
-    server.start();
-
-  } catch(std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
-
-  return 0;
+    return 0;
 }

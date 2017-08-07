@@ -10,72 +10,92 @@
 #include <boost/system/error_code.hpp>
 #include <vector>
 
-class message
-{
+class message {
 public:
-  enum class message_type {
-    text,
-    command,
-    unknown
-  };
+    enum class message_type {
+        text,
+        command,
+        unknown
+    };
 
-  static int message_type_to_int(message::message_type mt);
-  static message::message_type int_to_message_type(int i);
-  static std::string message_type_to_string(message::message_type mt);
+    static int message_type_to_int(message::message_type mt);
 
-  message();
-  message(const std::string& s, message::message_type type = message::message_type::text);
-  message(const std::string& s, const std::string& target);
+    static message::message_type int_to_message_type(int i);
 
-  static constexpr std::size_t header_size() {
-    return message_type_length_ + message_size_length_;
-  }
+    static std::string message_type_to_string(message::message_type mt);
 
-  static const std::size_t max_length = 512;
-  static const std::size_t target_size = 20;
+    message();
 
-  message_type type() const;
-  std::string content() const;
-  std::string target() const;
+    message(const std::string &s, message::message_type type = message::message_type::text);
 
-  std::size_t content_size() const;
-  std::size_t total_size() const;
+    message(const std::string &s, const std::string &target);
 
-  char* data();
-  const char* data() const;
+    static constexpr std::size_t header_size() {
+        return message_type_length_ + message_size_length_;
+    }
 
-  char* head_begin();
-  char* head_end();
-  const char* head_begin() const;
-  const char* head_end() const;
+    static const std::size_t max_length = 512;
+    static const std::size_t target_size = 20;
 
-  char* content_begin();
-  char* content_end();
-  const char* content_begin() const;
-  const char* content_end() const;
+    message_type type() const;
 
-  char* target_begin();
-  char* target_end();
-  const char* target_begin() const;
-  const char* target_end() const;
+    std::string content() const;
 
-  bool decode();
-  void encode();
+    std::string target() const;
+
+    std::size_t content_size() const;
+
+    std::size_t total_size() const;
+
+    char *data();
+
+    const char *data() const;
+
+    char *head_begin();
+
+    char *head_end();
+
+    const char *head_begin() const;
+
+    const char *head_end() const;
+
+    char *content_begin();
+
+    char *content_end();
+
+    const char *content_begin() const;
+
+    const char *content_end() const;
+
+    char *target_begin();
+
+    char *target_end();
+
+    const char *target_begin() const;
+
+    const char *target_end() const;
+
+    bool decode();
+
+    void encode();
+
+    std::string debug_string() const;
 private:
-  static constexpr std::size_t message_type_length_ = 4;
-  static constexpr std::size_t message_size_length_ = 4;
+    static constexpr std::size_t message_type_length_ = 4;
+    static constexpr std::size_t message_size_length_ = 4;
 
-  struct head {
-    message_type type;
-    std::size_t size;
+    struct head {
+        message_type type;
+        std::size_t size;
 
-    head() : type(message_type::unknown), size(0) { }
-  };
+        head() : type(message_type::unknown), size(0) {}
+    };
 
-  head head_;
+    head head_;
 
-  std::array<char, max_length + message_type_length_ + message_size_length_ + target_size + 1> buffer;
+    std::array<char, max_length + message_type_length_ + message_size_length_ + target_size + 1> buffer;
 };
 
-std::ostream& operator<<(std::ostream& os, const message& msg);
+std::ostream &operator<<(std::ostream &os, const message &msg);
+
 #endif //BOOSTCHAT_MESSAGE_H

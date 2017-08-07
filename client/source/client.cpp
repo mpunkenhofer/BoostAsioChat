@@ -11,7 +11,7 @@
 int main(int argc, char** argv)
 {
   if(argc != 3) {
-    std::cout << "Usage: ./client <host> <port>\n";
+    std::cout << "Usage: ./Client <host> <port>\n";
     return 1;
   }
 

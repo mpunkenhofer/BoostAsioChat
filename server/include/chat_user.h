@@ -14,42 +14,47 @@
 #include "message.h"
 
 class chat_channel;
+
 class chat_user_manager;
 
 using chat_channel_ptr = std::shared_ptr<chat_channel>;
 
-class chat_user : public std::enable_shared_from_this<chat_user>
-{
+class chat_user : public std::enable_shared_from_this<chat_user> {
 public:
-  //chat_user(const chat_user&) = delete;
-  //chat_user& operator=(const chat_user&) = delete;
+    //chat_user(const chat_user&) = delete;
+    //chat_user& operator=(const chat_user&) = delete;
 
-  chat_user(boost::asio::io_service&, chat_user_manager&);
+    chat_user(boost::asio::io_service &, chat_user_manager &);
 
-  void start();
-  void stop();
+    void start();
 
-  void write(const message& msg);
+    void stop();
 
-  std::string name(const std::string& n = std::string(""));
+    void write(const message &msg);
 
-  boost::asio::ip::tcp::socket& socket();
+    std::string name(const std::string &n = std::string(""));
+
+    boost::asio::ip::tcp::socket &socket();
+
 private:
-  boost::asio::ip::tcp::socket socket_;
-  boost::asio::io_service& io_service_;
+    boost::asio::io_service &io_service_;
+    boost::asio::ip::tcp::socket socket_;
 
-  chat_user_manager& manager_;
+    chat_user_manager &manager_;
 
-  std::string name_;
-  std::set<chat_channel_ptr> channels_;
+    std::string name_;
+    std::set<chat_channel_ptr> channels_;
 
-  std::deque<message> write_msgs_;
-  message read_message_;
+    std::deque<message> write_msgs_;
+    message read_message_;
 
-  void do_read_header();
-  void do_read_target();
-  void do_read_body();
-  void do_write();
+    void do_read_header();
+
+    void do_read_target();
+
+    void do_read_body();
+
+    void do_write();
 };
 
 using chat_user_ptr = std::shared_ptr<chat_user>;
