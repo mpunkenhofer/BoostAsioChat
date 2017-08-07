@@ -18,7 +18,7 @@ chat_channel::chat_channel(chat_server &server, chat_user_manager &manager, cons
 }
 
 void chat_channel::publish(const message &msg) {
-    LOG(INFO) << "publish: " + msg.debug_string();
+    LOG(INFO) << "channel: " << name_ << "publish: " << msg;
 
     for (auto u : users_)
         u->write(msg);
