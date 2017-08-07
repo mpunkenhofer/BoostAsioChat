@@ -83,7 +83,7 @@ void chat_client::do_read_body()
 
 void chat_client::print()
 {
-  std::cout << read_msg_.target() << ": " << read_msg_.content() << '\n';
+  std::cout << '\n' << read_msg_.target() << ": " << read_msg_.content() << '\n';
 }
 
 void chat_client::do_write()

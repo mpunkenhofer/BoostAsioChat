@@ -40,7 +40,11 @@ int main(int argc, char **argv) {
 
 void init_logger() {
     el::Configurations defaultConf;
+    
     defaultConf.set(el::Level::Info,
                     el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
+    defaultConf.set(el::Level::Warning,
+                    el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
+    
     el::Loggers::reconfigureLogger("default", defaultConf);
 }

@@ -41,6 +41,10 @@ public:
 
     boost::asio::ip::tcp::socket &socket();
 
+    void join_channel(chat_channel_ptr);
+    void leave_channel(chat_channel_ptr);
+    void leave_all_channels();
+    
 private:
     boost::asio::io_service &io_service_;
     boost::asio::ip::tcp::socket socket_;

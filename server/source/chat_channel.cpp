@@ -14,7 +14,7 @@ chat_channel::chat_channel(chat_server &server, chat_user_manager &manager, cons
         server_(server),
         manager_(manager),
         name_(name) {
-    LOG(INFO) << "channel " << name_ << " is created.";
+    LOG(INFO) << "channel: " << name_ << " is created.";
 }
 
 void chat_channel::publish(const message &msg) {
@@ -39,12 +39,12 @@ std::vector<std::string> chat_channel::user_names() const {
 }
 
 void chat_channel::join(chat_user_ptr c) {
-    LOG(INFO) << "user " << c->name() << " is joining " << name_;
+    LOG(INFO) << "user: " << c->name() << " joined: " << name_;
     users_.insert(c);
 }
 
 void chat_channel::leave(chat_user_ptr c) {
-    LOG(INFO) << "user " << c->name() << " is leaving " << name_;
+    LOG(INFO) << "user: " << c->name() << " left: " << name_;
     users_.erase(c);
 
     if (users_.empty()) {
@@ -53,11 +53,13 @@ void chat_channel::leave(chat_user_ptr c) {
 }
 
 void chat_channel::leave_all() {
-    LOG(INFO) << name_ << " all users are forced to leave.";
+    if(!users_.empty()) {
+        LOG(INFO) << name_ << " all users are forced to leave.";
 
-    users_.clear();
+        users_.clear();
 
-    server_.remove_channel(name_);
+        server_.remove_channel(name_);
+    }
 }
 
 

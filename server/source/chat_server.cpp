@@ -32,7 +32,7 @@ void chat_server::do_accept() {
 
     LOG(INFO) << "waiting for a new connection...";
 
-    acceptor_.async_accept(new_connection->socket(), [&](const boost::system::error_code &ec) {
+    acceptor_.async_accept(new_connection->socket(), [this, new_connection](const boost::system::error_code &ec) {
         // Check whether the server was stopped by a signal before this
         // completion handler had a chance to run.
         if (!acceptor_.is_open())
@@ -72,6 +72,8 @@ bool chat_server::remove_channel(const std::string &id) {
         auto it = channels_.find(id);
 
         if(it != channels_.end()) {
+            LOG(INFO) << "channel: " << id << " deleted!";
+
             it->second->leave_all(); //make sure to remove all users from the channel
             channels_.erase(it);
         } else {
@@ -100,6 +102,13 @@ chat_channel_ptr chat_server::channel(const std::string &id) {
     return it != channels_.end() ? it->second : nullptr;
 }
 
+bool chat_server::unused_id(const std::string &id) const {
+    auto channel = channels_.find(id);
+    auto user = manager_.user_exists(id);
+
+    return (user || (channel != channels_.end())) ? false : true;
+}
+
 void chat_server::handle_message(const message &msg, chat_user_ptr user) {
     LOG(INFO) << "user: " << user->name() << "; msg: " << msg;
 
@@ -110,7 +119,8 @@ void chat_server::handle_message(const message &msg, chat_user_ptr user) {
         auto chan = channel(target);
 
         if(chan && user->is_joined(chan)) {
-            chan->publish(msg);
+            chan->publish(message(msg.content(), user->name().substr(0,std::min(user->name().size(),
+                                                                                message::target_size - 1))));
             return;
         }
 
@@ -126,13 +136,6 @@ void chat_server::handle_message(const message &msg, chat_user_ptr user) {
     }
 }
 
-bool chat_server::unused_id(const std::string &id) const {
-    auto channel = channels_.find(id);
-    auto user = manager_.user_exists(id);
-
-    return (user || (channel != channels_.end())) ? true : false;
-}
-
 void chat_server::do_command(const message &msg, chat_user_ptr user) {
     std::vector<std::string> tokens;
     auto content = msg.content();
@@ -146,25 +149,35 @@ void chat_server::do_command(const message &msg, chat_user_ptr user) {
     auto arguments = std::vector<std::string>(tokens.begin() + 1, tokens.end());
 
     if(command == "/join") {
+        if(arguments.empty()) {
+            //TODO send error msg to user
+            return;
+        }
+
         auto arg = arguments[0];
         auto chan = channel(arg);
 
         if(chan)
-            chan->join(user);
+            user->join_channel(chan);
         else if(unused_id(arg)) {
             auto created_chan = create_channel(arg);
-            created_chan->join(user);
+            user->join_channel(created_chan);
         }
 
         return;
     }
 
     if(command == "/leave") {
+        if(arguments.empty()) {
+            //TODO send error msg to user
+            return;
+        }
+
         auto arg = arguments[0];
         auto chan = channel(arg);
 
         if(chan && user->is_joined(chan)) {
-            chan->leave(user);
+            user->leave_channel(chan);
         } else {
             // TODO could send user error msg
             LOG(WARNING) << user->name() << " can't leave channel he is not part of. (" << arg << ")";
@@ -174,6 +187,11 @@ void chat_server::do_command(const message &msg, chat_user_ptr user) {
     }
 
     if(command == "/nick") {
+        if(arguments.empty()) {
+            //TODO send error msg to user
+            return;
+        }
+
         auto arg = arguments[0];
 
         if(unused_id(arg))

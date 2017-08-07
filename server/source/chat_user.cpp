@@ -2,10 +2,16 @@
 // Created by necator on 8/1/17.
 //
 
-#include <iostream>
-#include "easylogging++.h"
 #include "chat_user.h"
 
+#include <iostream>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
+#include "easylogging++.h"
+
+#include "chat_server.h"
 #include "chat_channel.h"
 #include "chat_user_manager.h"
 
@@ -14,7 +20,14 @@ chat_user::chat_user(boost::asio::io_service &io_service, chat_server& server, c
         socket_(io_service),
         server_(server),
         manager_(cm) {
+    auto uuid = boost::uuids::random_generator()();
 
+    std::stringstream ss;
+    ss << uuid;
+
+    name_ = ss.str();
+
+    LOG(INFO) << "new user: " << name_;
 }
 
 boost::asio::ip::tcp::socket &chat_user::socket() {
@@ -28,8 +41,7 @@ void chat_user::start() {
 void chat_user::stop() {
     io_service_.post([this]() {
 
-        for (auto c : channels_)
-            c->leave(shared_from_this());
+        leave_all_channels();
 
         socket_.close();
     });
@@ -46,6 +58,8 @@ void chat_user::write(const message &msg) {
 }
 
 void chat_user::do_read_header() {
+    LOG(INFO) << "waiting for a msg...";
+
     auto self(shared_from_this());
     boost::asio::async_read(socket_,
                             boost::asio::buffer(read_message_.data(), message::header_size()),
@@ -77,7 +91,7 @@ void chat_user::do_read_body() {
                             boost::asio::buffer(read_message_.content_begin(), read_message_.content_size()),
                             [this, self](const boost::system::error_code &ec, std::size_t s) {
                                 if (!ec) {
-
+                                    server_.handle_message(read_message_, shared_from_this());
                                     do_read_header();
                                 } else {
                                     manager_.stop(shared_from_this());
@@ -124,8 +138,26 @@ std::vector<std::string> chat_user::joined_channels() const {
 bool chat_user::is_joined(chat_channel_ptr c) {
     auto it = channels_.find(c);
 
-    return it != channels_.end();
+    auto boolean = it != channels_.end();
+
+    return boolean;
 }
 
+void chat_user::join_channel(chat_channel_ptr c) {
+    c->join(shared_from_this());
+    
+    channels_.insert(c);
+}
 
+void chat_user::leave_channel(chat_channel_ptr c) {
+    c->leave(shared_from_this());
+    
+    channels_.erase(c);
+}
 
+void chat_user::leave_all_channels() {
+    for (auto c : channels_)
+        c->leave(shared_from_this());
+    
+    channels_.clear();
+}

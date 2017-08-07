@@ -37,18 +37,18 @@ message::message_type message::type() const {
 }
 
 std::string message::content() const {
-    return std::string(content_begin(), content_end());
+    return std::string(ccontent_begin(), ccontent_end());
 }
 
 std::string message::target() const {
-    return std::string(target_begin(), target_end());
+    return std::string(ctarget_begin(), ctarget_begin() + std::strlen(ctarget_begin()));
 }
 
 char *message::data() {
     return buffer.begin();
 }
 
-const char *message::data() const {
+const char *message::cdata() const {
     return buffer.begin();
 }
 
@@ -56,7 +56,7 @@ char *message::head_begin() {
     return buffer.begin();
 }
 
-const char *message::head_begin() const {
+const char *message::chead_begin() const {
     return buffer.begin();
 }
 
@@ -64,7 +64,7 @@ char *message::head_end() {
     return buffer.begin() + header_size();
 }
 
-const char *message::head_end() const {
+const char *message::chead_end() const {
     return buffer.begin() + header_size();
 }
 
@@ -72,7 +72,7 @@ char *message::content_begin() {
     return buffer.begin() + header_size() + target_size;
 }
 
-const char *message::content_begin() const {
+const char *message::ccontent_begin() const {
     return buffer.begin() + header_size() + target_size;
 }
 
@@ -80,7 +80,7 @@ char *message::content_end() {
     return buffer.begin() + header_size() + target_size + head_.size;
 }
 
-const char *message::content_end() const {
+const char *message::ccontent_end() const {
     return buffer.begin() + header_size() + target_size + head_.size;
 }
 
@@ -88,7 +88,7 @@ char *message::target_begin() {
     return buffer.begin() + header_size();
 }
 
-const char *message::target_begin() const {
+const char *message::ctarget_begin() const {
     return buffer.begin() + header_size();
 }
 
@@ -96,8 +96,8 @@ char *message::target_end() {
     return target_begin() + std::strlen(target_begin()) + 1;
 }
 
-const char *message::target_end() const {
-    return target_begin() + std::strlen(target_begin()) + 1;
+const char *message::ctarget_end() const {
+    return ctarget_begin() + std::strlen(ctarget_begin()) + 1;
 }
 
 std::size_t message::content_size() const {

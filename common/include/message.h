@@ -50,31 +50,31 @@ public:
 
     char *data();
 
-    const char *data() const;
+    const char *cdata() const;
 
     char *head_begin();
 
     char *head_end();
 
-    const char *head_begin() const;
+    const char *chead_begin() const;
 
-    const char *head_end() const;
+    const char *chead_end() const;
 
     char *content_begin();
 
     char *content_end();
 
-    const char *content_begin() const;
+    const char *ccontent_begin() const;
 
-    const char *content_end() const;
+    const char *ccontent_end() const;
 
     char *target_begin();
 
     char *target_end();
 
-    const char *target_begin() const;
+    const char *ctarget_begin() const;
 
-    const char *target_end() const;
+    const char *ctarget_end() const;
 
     bool decode();
 
