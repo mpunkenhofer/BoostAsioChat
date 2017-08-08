@@ -10,8 +10,8 @@
 #include <array>
 #include <deque>
 #include <set>
+#include <chat_message.h>
 
-#include "message.h"
 
 class chat_server;
 
@@ -32,7 +32,7 @@ public:
 
     void stop();
 
-    void write(const message &msg);
+    void write(const chat_message &msg);
 
     std::string name(const std::string &n = std::string(""));
 
@@ -56,14 +56,14 @@ private:
 
     std::set<chat_channel_ptr> channels_;
 
-    std::deque<message> write_msgs_;
-    message read_message_;
+    std::deque<chat_message> write_msgs_;
+
+    std::array<char, chat_message::header_length> inbound_header_;
+    std::vector<char> inbound_data_;
 
     void do_read_header();
 
-    void do_read_target();
-
-    void do_read_body();
+    void do_read_message();
 
     void do_write();
 };

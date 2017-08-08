@@ -1,4 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR}/server/include ${CMAKE_SOURCE_DIR}/common/include)
+link_directories(${CMAKE_SOURCE_DIR}/server/include ${CMAKE_SOURCE_DIR}/common/include)
 
 add_library(ChatServer
         chat_channel.cpp        ${CMAKE_SOURCE_DIR}/server/include/chat_channel.h

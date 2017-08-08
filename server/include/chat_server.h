@@ -10,7 +10,7 @@
 
 #include "chat_user_manager.h"
 
-class message;
+class chat_message;
 
 class chat_channel;
 
@@ -34,7 +34,7 @@ public:
 
     chat_channel_ptr channel(const std::string& id);
 
-    void handle_message(const message& msg, chat_user_ptr user);
+    void handle_message(const chat_message& msg, chat_user_ptr user);
 
     bool unused_id(const std::string& id) const;
 private:
@@ -47,7 +47,7 @@ private:
 
     void do_accept();
 
-    void do_command(const message &msg, chat_user_ptr user);
+    void do_command(const chat_message &msg, chat_user_ptr user);
 };
 
 

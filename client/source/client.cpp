@@ -8,57 +8,77 @@
 #include <boost/algorithm/string.hpp>
 #include <thread>
 
-int main(int argc, char** argv)
-{
-  if(argc != 3) {
-    std::cout << "Usage: ./Client <host> <port>\n";
-    return 1;
-  }
+#include "chat_message.h"
 
-  try {
-    std::cout << "Starting chat client...\n";
+#define _ELPP_THREAD_SAFE
+#include "easylogging++.h"
+INITIALIZE_EASYLOGGINGPP
 
-    boost::asio::io_service io_service;
-    boost::asio::ip::tcp::resolver resolver(io_service);
+void init_logger();
 
-    auto endpoint_iterator = resolver.resolve({argv[1], argv[2]});
-
-    chat_client client(io_service, endpoint_iterator);
-
-    std::thread t([&io_service] { io_service.run(); });
-
-    std::string active_target("-");
-    char line[message::max_length + 1];
-
-    std::cout << active_target << ": ";
-
-    while(std::cin.getline(line, message::max_length + 1)) {
-      if(std::strcmp(line, "/quit") == 0 || std::strcmp(line, "/q") == 0)
-        break;
-      else if(std::strncmp(line, "/channel", std::strlen("/channel")) == 0 || std::strncmp(line, "/c", std::strlen("/c")) == 0) {
-        std::vector<std::string> tokens;
-        boost::split(tokens, line, boost::is_any_of("\t "));
-
-        if(tokens.size() > 1)
-          active_target = tokens[1];
-      }
-      else if(line[0] == '/') {
-        message msg(std::string(line, line + std::strlen(line)), message::message_type::command);
-        client.write(msg);
-      }
-      else {
-        message msg(std::string(line, line + std::strlen(line)), active_target);
-        client.write(msg);
-      }
-
-      std::cout << active_target << ": ";
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        std::cout << "Usage: ./Client <host> <port>\n";
+        return 1;
     }
 
-    client.close();
-    t.join();
+    init_logger();
 
-  } catch(std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
-  return 0;
+    try {
+        LOG(INFO) << "starting chat client...";
+
+        boost::asio::io_service io_service;
+        boost::asio::ip::tcp::resolver resolver(io_service);
+
+        auto endpoint_iterator = resolver.resolve({argv[1], argv[2]});
+
+        chat_client client(io_service, endpoint_iterator);
+
+        std::thread t([&io_service] { io_service.run(); });
+
+        std::cout << "To change the target you are talking to: /t <target>\n";
+        std::string active_target("-");
+        char line[chat_message::content_max_length + 1];
+
+        while (std::cin.getline(line, chat_message::content_max_length + 1)) {
+            if (std::strcmp(line, "/quit") == 0 || std::strcmp(line, "/q") == 0)
+                break;
+            else if (std::strncmp(line, "/target", std::strlen("/target")) == 0 ||
+                     std::strncmp(line, "/t", std::strlen("/t")) == 0) {
+                std::vector<std::string> tokens;
+                boost::split(tokens, line, boost::is_any_of("\t "));
+
+                if (tokens.size() > 1) {
+                    active_target = tokens[1];
+                    std::cout << "You are now talking to: " << active_target << '\n';
+                } else {
+                    std::cout << "Currently talking to: " << active_target << '\n';
+                }
+            } else if (line[0] == '/') {
+                chat_message msg("source", active_target, std::string(line, line + std::strlen(line)), chat_message_type::command);
+                client.write(msg);
+            } else {
+                chat_message msg("source", active_target, std::string(line, line + std::strlen(line)));
+                client.write(msg);
+            }
+        }
+
+        client.close();
+        t.join();
+
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
+    return 0;
+}
+
+void init_logger() {
+    el::Configurations defaultConf;
+
+    defaultConf.set(el::Level::Info,
+                    el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
+    defaultConf.set(el::Level::Warning,
+                    el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
+
+    el::Loggers::reconfigureLogger("default", defaultConf);
 }

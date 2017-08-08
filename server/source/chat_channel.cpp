@@ -17,7 +17,7 @@ chat_channel::chat_channel(chat_server &server, chat_user_manager &manager, cons
     LOG(INFO) << "channel: " << name_ << " is created.";
 }
 
-void chat_channel::publish(const message &msg) {
+void chat_channel::publish(const chat_message &msg) {
     LOG(INFO) << "channel: " << name_ << "publish: " << msg;
 
     for (auto u : users_)

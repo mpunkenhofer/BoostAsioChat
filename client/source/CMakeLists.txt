@@ -6,8 +6,7 @@ add_library(ChatClient
 add_executable(Client
         client.cpp)
 
-target_link_libraries(ChatClient
-        ChatCommon)
+target_link_libraries(ChatClient ChatCommon)
 
 target_link_libraries(Client
         pthread

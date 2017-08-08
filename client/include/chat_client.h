@@ -8,29 +8,35 @@
 #include <boost/asio.hpp>
 #include <deque>
 
-#include "message.h"
+#include "chat_message.h"
 
-class chat_client
-{
+class chat_client;
+
+using chat_client_ptr = std::shared_ptr<chat_client>;
+
+class chat_client {
 public:
-  chat_client(boost::asio::io_service& io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
+    chat_client(boost::asio::io_service &io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 
-  void write(const message &msg);
-  void close();
+    void write(chat_message &msg);
+    void close();
 private:
-  boost::asio::io_service& io_service_;
-  boost::asio::ip::tcp::socket socket_;
-  message read_msg_;
-  std::deque<message> write_msgs_;
+    boost::asio::io_service& io_service_;
+    boost::asio::ip::tcp::socket socket_;
 
-  void do_connect(boost::asio::ip::tcp::resolver::iterator);
-  void do_read_header();
-  void do_read_target();
-  void do_read_body();
-  void do_write();
+    boost::asio::io_service::strand write_strand_;
+    std::deque<chat_message> write_msgs_;
 
-  void print();
+
+    std::array<char, chat_message::header_length> inbound_header_;
+    std::vector<char> inbound_data_;
+
+    void do_connect(boost::asio::ip::tcp::resolver::iterator e);
+    void do_read_header();
+    void do_read_message();
+    void do_write();
+
+    void print(const chat_message&);
+    void error_handler();
 };
-
-
 #endif //BOOSTCHAT_CHAT_CLIENT_H

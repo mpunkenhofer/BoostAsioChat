@@ -10,7 +10,7 @@
 #include <vector>
 #include <memory>
 
-class message;
+class chat_message;
 
 class chat_user;
 
@@ -24,7 +24,7 @@ class chat_channel {
 public:
     chat_channel(chat_server &server, chat_user_manager &manager, const std::string &name);
 
-    void publish(const message &msg);
+    void publish(const chat_message &msg);
 
     std::string name() const;
 

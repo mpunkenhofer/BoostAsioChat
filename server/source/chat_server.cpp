@@ -2,12 +2,13 @@
 // Created by necator on 8/1/17.
 //
 
-#include <iostream>
-#include <boost/algorithm/string.hpp>
 #include "chat_server.h"
 
-#include "chat_user.h"
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+
 #include "chat_channel.h"
+#include "chat_message.h"
 
 #include "easylogging++.h"
 
@@ -109,18 +110,20 @@ bool chat_server::unused_id(const std::string &id) const {
     return (user || (channel != channels_.end())) ? false : true;
 }
 
-void chat_server::handle_message(const message &msg, chat_user_ptr user) {
+void chat_server::handle_message(const chat_message &msg, chat_user_ptr user) {
     LOG(INFO) << "user: " << user->name() << "; msg: " << msg;
 
-    if(msg.type() == message::message_type::command)
+    if(msg.type() == chat_message_type::command)
         do_command(msg, user);
     else {
         auto target = msg.target();
         auto chan = channel(target);
 
         if(chan && user->is_joined(chan)) {
-            chan->publish(message(msg.content(), user->name().substr(0,std::min(user->name().size(),
-                                                                                message::target_size - 1))));
+            chan->publish(
+                    chat_message(user->name().substr(0,std::min(user->name().size(), std::size_t(20))),
+                                 target,
+                                 msg.content()));
             return;
         }
 
@@ -136,7 +139,7 @@ void chat_server::handle_message(const message &msg, chat_user_ptr user) {
     }
 }
 
-void chat_server::do_command(const message &msg, chat_user_ptr user) {
+void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
     std::vector<std::string> tokens;
     auto content = msg.content();
 
