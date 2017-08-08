@@ -130,7 +130,9 @@ void chat_server::handle_message(const chat_message &msg, chat_user_ptr user) {
         auto tell_target = manager_.user(target);
 
         if(tell_target) {
-            tell_target->write(msg);
+            tell_target->write(chat_message(user->name().substr(0,std::min(user->name().size(), std::size_t(20))),
+                                            target,
+                                            msg.content()));
             return;
         }
 

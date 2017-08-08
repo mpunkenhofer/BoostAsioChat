@@ -4,6 +4,7 @@
 
 #include "chat_client.h"
 
+#define ELPP_DISABLE_INFO_LOGS
 #include "easylogging++.h"
 
 chat_client::chat_client(boost::asio::io_service &io_service,

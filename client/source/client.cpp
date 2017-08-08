@@ -10,7 +10,7 @@
 
 #include "chat_message.h"
 
-#define _ELPP_THREAD_SAFE
+#define ELPP_DISABLE_INFO_LOGS
 #include "easylogging++.h"
 INITIALIZE_EASYLOGGINGPP
 

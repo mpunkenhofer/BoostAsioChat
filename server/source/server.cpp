@@ -7,7 +7,6 @@
 
 #include "chat_server.h"
 
-#define _ELPP_THREAD_SAFE
 #include "easylogging++.h"
 INITIALIZE_EASYLOGGINGPP
 
