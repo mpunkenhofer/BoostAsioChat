@@ -17,7 +17,7 @@ int to_int(chat_message_type t) {
 }
 
 std::string to_string(chat_message_type t) {
-    const static std::vector<std::string> names {"text", "command", "status", "unknown"};
+    const static std::vector<std::string> names {"command", "text", "status", "unknown"};
 
     return names[to_int(t)];
 }

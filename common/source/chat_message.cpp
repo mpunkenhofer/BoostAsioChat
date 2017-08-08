@@ -110,7 +110,7 @@ std::string serialize_chat_message(const chat_message& msg) {
 chat_message deserialize_chat_message(const std::vector<char>& data) {
     std::string s(data.begin(), data.end());
 
-    std::istringstream is;
+    std::istringstream is(s);
 
     boost::archive::text_iarchive archive(is);
 
