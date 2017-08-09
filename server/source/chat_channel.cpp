@@ -28,7 +28,7 @@ std::string chat_channel::name() const {
     return name_;
 }
 
-std::vector<std::string> chat_channel::user_names() const {
+std::vector<std::string> chat_channel::user_list() const {
     std::vector<std::string> ret;
 
     std::transform(users_.begin(), users_.end(), std::back_inserter(ret), [](const chat_user_ptr u) {

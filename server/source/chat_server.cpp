@@ -18,6 +18,7 @@ chat_server::chat_server(boost::asio::io_service &io_service, const tcp::endpoin
         io_service_(io_service),
         acceptor_(io_service, endpoint),
         manager_() {
+
 }
 
 void chat_server::start() {
@@ -25,7 +26,6 @@ void chat_server::start() {
     LOG(INFO) << "listing on port: " << endpoint().port();
 
     do_accept();
-    io_service_.run();
 }
 
 void chat_server::do_accept() {
@@ -97,10 +97,19 @@ std::vector<std::string> chat_server::channel_list() const {
     return ret;
 }
 
+std::vector<std::string> chat_server::user_list() const {
+    return manager_.user_list();
+}
+
+
 chat_channel_ptr chat_server::channel(const std::string &id) {
     auto it = channels_.find(id);
 
     return it != channels_.end() ? it->second : nullptr;
+}
+
+chat_user_ptr chat_server::user(const std::string &id) {
+    return manager_.user(id);
 }
 
 bool chat_server::unused_id(const std::string &id) const {
@@ -210,4 +219,9 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
     }
 
     LOG(WARNING) << "unknown command. (" << user->name() << "); " << msg;
+}
+
+void chat_server::stop() {
+    acceptor_.close();
+    manager_.stop_all();
 }

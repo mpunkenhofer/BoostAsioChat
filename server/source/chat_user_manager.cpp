@@ -48,6 +48,17 @@ bool chat_user_manager::user_exists(const std::string &name) const {
     return (it != connections_.end()) ? true : false;
 }
 
+std::vector<std::string> chat_user_manager::user_list() const {
+    std::vector<std::string> ret;
+    
+    std::transform(connections_.begin(), connections_.end(), std::back_inserter(ret),
+                   [](chat_user_ptr c) {
+                       return c->name();
+                   });
+    
+    return ret;
+}
+
 
 
 

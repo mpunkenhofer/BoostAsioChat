@@ -24,8 +24,8 @@ public:
     void stop_all();
 
     chat_user_ptr user(const std::string &name);
-
     bool user_exists(const std::string& name) const;
+    std::vector<std::string> user_list() const;
 private:
     std::set<chat_user_ptr> connections_;
 };

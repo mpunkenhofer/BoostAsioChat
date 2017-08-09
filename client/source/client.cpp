@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         std::thread t([&io_service] { io_service.run(); });
 
         std::cout << "To change the target you are talking to: /t <target>\n";
-        std::string active_target("-");
+        std::string active_target("");
         char line[chat_message::content_max_length + 1];
 
         while (std::cin.getline(line, chat_message::content_max_length + 1)) {

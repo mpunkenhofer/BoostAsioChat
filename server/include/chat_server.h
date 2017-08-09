@@ -23,6 +23,7 @@ public:
                 boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 666));
 
     void start();
+    void stop();
 
     const boost::asio::ip::tcp::endpoint endpoint() const;
 
@@ -31,8 +32,10 @@ public:
     chat_channel_ptr create_channel(const std::string &id);
 
     std::vector<std::string> channel_list() const;
+    std::vector<std::string> user_list() const;
 
     chat_channel_ptr channel(const std::string& id);
+    chat_user_ptr user(const std::string& id);
 
     void handle_message(const chat_message& msg, chat_user_ptr user);
 

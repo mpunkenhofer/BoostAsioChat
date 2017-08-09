@@ -28,7 +28,7 @@ public:
 
     std::string name() const;
 
-    std::vector<std::string> user_names() const;
+    std::vector<std::string> user_list() const;
 
     void join(chat_user_ptr c);
 
