@@ -18,8 +18,8 @@ void chat_user_manager::start(chat_user_ptr c) {
 
 void chat_user_manager::stop(chat_user_ptr c) {
     LOG(INFO) << "removed connection from manager.";
-    connections_.erase(c);
     c->stop();
+    connections_.erase(c);
 }
 
 void chat_user_manager::stop_all() {

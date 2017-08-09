@@ -41,8 +41,6 @@ public:
 
     boost::asio::ip::tcp::socket &socket();
 
-    void join_channel(chat_channel_ptr);
-    void leave_channel(chat_channel_ptr);
     void leave_all_channels();
     
 private:
@@ -54,6 +52,7 @@ private:
 
     std::string name_;
 
+    friend class chat_channel;
     std::set<chat_channel_ptr> channels_;
 
     std::deque<chat_message> write_msgs_;

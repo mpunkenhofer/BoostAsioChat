@@ -143,18 +143,6 @@ bool chat_user::is_joined(chat_channel_ptr c) {
     return boolean;
 }
 
-void chat_user::join_channel(chat_channel_ptr c) {
-    c->join(shared_from_this());
-    
-    channels_.insert(c);
-}
-
-void chat_user::leave_channel(chat_channel_ptr c) {
-    c->leave(shared_from_this());
-    
-    channels_.erase(c);
-}
-
 void chat_user::leave_all_channels() {
     for (auto c : channels_)
         c->leave(shared_from_this());

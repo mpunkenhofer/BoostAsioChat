@@ -40,11 +40,17 @@ std::vector<std::string> chat_channel::user_names() const {
 
 void chat_channel::join(chat_user_ptr c) {
     LOG(INFO) << "user: " << c->name() << " joined: " << name_;
+
+    c->channels_.insert(shared_from_this());
+
     users_.insert(c);
 }
 
 void chat_channel::leave(chat_user_ptr c) {
     LOG(INFO) << "user: " << c->name() << " left: " << name_;
+
+    c->channels_.erase(shared_from_this());
+
     users_.erase(c);
 
     if (users_.empty()) {
@@ -55,6 +61,9 @@ void chat_channel::leave(chat_user_ptr c) {
 void chat_channel::leave_all() {
     if(!users_.empty()) {
         LOG(INFO) << name_ << " all users are forced to leave.";
+
+        for(auto u : users_)
+            leave(u);
 
         users_.clear();
 

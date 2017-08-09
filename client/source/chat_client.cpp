@@ -36,7 +36,9 @@ void chat_client::error_handler() {
 }
 
 void chat_client::close() {
-    io_service_.post([this](){ socket_.close(); });
+    io_service_.post([this](){
+        socket_.close();
+    });
 }
 
 void chat_client::write(chat_message &msg) {

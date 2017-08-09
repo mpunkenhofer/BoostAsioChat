@@ -20,7 +20,7 @@ class chat_user_manager;
 
 using chat_user_ptr = std::shared_ptr<chat_user>;
 
-class chat_channel {
+class chat_channel : public std::enable_shared_from_this<chat_channel> {
 public:
     chat_channel(chat_server &server, chat_user_manager &manager, const std::string &name);
 

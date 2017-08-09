@@ -163,10 +163,10 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
         auto chan = channel(arg);
 
         if(chan)
-            user->join_channel(chan);
+            chan->join(user);
         else if(unused_id(arg)) {
             auto created_chan = create_channel(arg);
-            user->join_channel(created_chan);
+            created_chan->join(user);
         }
 
         return;
@@ -182,7 +182,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
         auto chan = channel(arg);
 
         if(chan && user->is_joined(chan)) {
-            user->leave_channel(chan);
+            chan->leave(user);
         } else {
             // TODO could send user error msg
             LOG(WARNING) << user->name() << " can't leave channel he is not part of. (" << arg << ")";
