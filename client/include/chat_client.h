@@ -36,7 +36,8 @@ private:
     void do_read_message();
     void do_write();
 
-    void print(const chat_message&);
+    void handle_message(chat_message);
+    void print(chat_message);
     void error_handler();
 };
 #endif //BOOSTCHAT_CHAT_CLIENT_H

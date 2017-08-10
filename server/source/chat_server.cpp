@@ -153,7 +153,7 @@ bool chat_server::unused_id(const std::string &id) const {
     return (user || (channel != channels_.end())) ? false : true;
 }
 
-void chat_server::handle_message(const chat_message &msg, chat_user_ptr user) {
+void chat_server::handle_message(chat_message msg, chat_user_ptr user) {
     LOG(INFO) << "user: " << user->name() << "; msg: " << msg;
 
     if(msg.type() == chat_message_type::command)

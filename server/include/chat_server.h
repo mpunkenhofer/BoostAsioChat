@@ -38,7 +38,7 @@ public:
     chat_channel_ptr channel(const std::string& id);
     chat_user_ptr user(const std::string& id);
 
-    void handle_message(const chat_message& msg, chat_user_ptr user);
+    void handle_message(chat_message msg, chat_user_ptr user);
 
     bool unused_id(const std::string& id) const;
 private:

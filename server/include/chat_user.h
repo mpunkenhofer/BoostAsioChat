@@ -47,6 +47,11 @@ private:
     boost::asio::io_service &io_service_;
     boost::asio::ip::tcp::socket socket_;
 
+    boost::asio::deadline_timer ping_timer_;
+    static const std::size_t ping_frequency_s_ = 30;
+    static const std::size_t ping_retry_max_ = 3;
+    std::size_t current_ping_retries_;
+
     chat_server& server_;
     chat_user_manager& manager_;
 
@@ -60,11 +65,15 @@ private:
     std::array<char, chat_message::header_length> inbound_header_;
     std::vector<char> inbound_data_;
 
+    bool pong_received_ = false;
+
     void do_read_header();
 
     void do_read_message();
 
     void do_write();
+
+    void ping();
 };
 
 using chat_user_ptr = std::shared_ptr<chat_user>;

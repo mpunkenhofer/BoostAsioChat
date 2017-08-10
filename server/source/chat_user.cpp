@@ -20,6 +20,8 @@
 chat_user::chat_user(boost::asio::io_service &io_service, chat_server& server, chat_user_manager &cm) :
         io_service_(io_service),
         socket_(io_service),
+        ping_timer_(io_service, boost::posix_time::seconds(ping_frequency_s_)),
+        current_ping_retries_(0),
         server_(server),
         manager_(cm) {
     auto uuid = boost::uuids::random_generator()();
@@ -37,23 +39,13 @@ boost::asio::ip::tcp::socket &chat_user::socket() {
 }
 
 void chat_user::start() {
+    ping();
     do_read_header();
 }
 
 void chat_user::stop() {
     leave_all_channels();
-
-//    auto self(shared_from_this());
-//
-//    io_service_.post([this, self]() {
-//
-//        leave_all_channels();
-//
-//        if(socket_.is_open()) {
-//            socket_.shutdown(socket_.shutdown_both);
-//            socket_.close();
-//        }
-//    });
+    ping_timer_.cancel();
 }
 
 void chat_user::write(const chat_message &msg) {
@@ -98,7 +90,14 @@ void chat_user::do_read_message() {
                             [this, self](const boost::system::error_code &ec,
                                          std::size_t s __attribute__ ((unused))) {
                                 if (!ec) {
-                                    server_.handle_message(deserialize_chat_message(inbound_data_), shared_from_this());
+                                    auto msg = deserialize_chat_message(inbound_data_);
+
+                                    if(msg.type() == chat_message_type::status && msg.content() == "pong") {
+                                        LOG(INFO) << name_ << ": received pong from client.";
+                                        pong_received_ = true;
+                                    }
+                                    else
+                                        server_.handle_message(std::move(msg), shared_from_this());
 
                                     do_read_header();
                                 } else {
@@ -126,6 +125,42 @@ void chat_user::do_write() {
                                      manager_.stop(shared_from_this());
                                  }
                              });
+}
+
+void chat_user::ping() {
+    LOG(INFO) << "Sending client(" << name_ << ") a ping.";
+
+    write(chat_message("server", name_.substr(chat_message::target_max_length), "ping", chat_message_type::status));
+
+    auto self(shared_from_this());
+
+    ping_timer_.async_wait([this, self](const boost::system::error_code& ec) {
+        if(!ec) {
+            if (pong_received_) {
+                current_ping_retries_ = 0;
+                pong_received_ = false;
+                ping_timer_.expires_at(ping_timer_.expires_at() + boost::posix_time::seconds(ping_frequency_s_));
+                ping();
+            } else if (current_ping_retries_ < ping_retry_max_) {
+                current_ping_retries_++;
+                ping_timer_.expires_at(ping_timer_.expires_at() + boost::posix_time::seconds(ping_frequency_s_));
+
+                LOG(INFO) << "Ping retry " << std::to_string(current_ping_retries_)
+                          << " of " << std::to_string(ping_retry_max_) << ".";
+
+                ping();
+            } else {
+                LOG(INFO) << name_ << ": Ping Timeout!";
+
+                leave_all_channels();
+
+                if (socket_.is_open()) {
+                    socket_.shutdown(socket_.shutdown_both);
+                    socket_.close();
+                }
+            }
+        }
+    });
 }
 
 std::string chat_user::name(const std::string &n) {

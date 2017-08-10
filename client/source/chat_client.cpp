@@ -26,7 +26,21 @@ void chat_client::do_connect(boost::asio::ip::tcp::resolver::iterator endpoint) 
                                });
 }
 
-void chat_client::print(const chat_message &msg) {
+void chat_client::handle_message(chat_message msg) {
+    if(msg.type() == chat_message_type::text)
+        print(std::move(msg));
+    else if(msg.type() == chat_message_type::status && msg.content() == "ping") {
+        LOG(INFO) << "server sent a ping ... replaying with a pong.";
+
+        chat_message msg("source", "server", "pong", chat_message_type::status);
+
+        //write(msg);
+    } else {
+        LOG(INFO) << "client can't handle this msg: " << msg;
+    }
+}
+
+void chat_client::print(chat_message msg) {
     std::cout << msg.target() << "::" << msg.source() << ": " << msg.content() << '\n';
 }
 
@@ -87,7 +101,7 @@ void chat_client::do_read_message() {
                             [this](const boost::system::error_code &ec,
                                          std::size_t s __attribute__ ((unused))) {
                                 if (!ec) {
-                                    print(deserialize_chat_message(inbound_data_));
+                                    handle_message(deserialize_chat_message(inbound_data_));
 
                                     do_read_header();
                                 } 
