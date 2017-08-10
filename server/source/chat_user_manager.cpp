@@ -10,16 +10,17 @@ chat_user_manager::chat_user_manager() {
 
 }
 
-void chat_user_manager::start(chat_user_ptr c) {
+void chat_user_manager::start(chat_user_ptr u) {
     LOG(INFO) << "added connection to manager.";
-    connections_.insert(c);
-    c->start();
+    connections_.insert(u);
+    u->start();
 }
 
-void chat_user_manager::stop(chat_user_ptr c) {
-    LOG(INFO) << "removed connection from manager.";
-    c->stop();
-    connections_.erase(c);
+void chat_user_manager::stop(chat_user_ptr u) {
+    auto name = u->name();
+    u->stop();
+    connections_.erase(u);
+    LOG(INFO) << "removed connection(" << name << ") from manager.";
 }
 
 void chat_user_manager::stop_all() {

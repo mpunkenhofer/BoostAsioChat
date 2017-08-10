@@ -10,7 +10,7 @@
 
 #include "chat_message.h"
 
-#define ELPP_DISABLE_INFO_LOGS
+//#define ELPP_DISABLE_INFO_LOGS
 #include "easylogging++.h"
 INITIALIZE_EASYLOGGINGPP
 
@@ -78,6 +78,8 @@ void init_logger() {
     defaultConf.set(el::Level::Info,
                     el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
     defaultConf.set(el::Level::Warning,
+                    el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
+    defaultConf.set(el::Level::Error,
                     el::ConfigurationType::Format, "%datetime %level [%func]: %msg");
 
     el::Loggers::reconfigureLogger("default", defaultConf);

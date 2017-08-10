@@ -12,6 +12,8 @@
 
 #include "easylogging++.h"
 
+#define SHARED_PTR_DEBUG
+
 using boost::asio::ip::tcp;
 
 chat_server::chat_server(boost::asio::io_service &io_service, const tcp::endpoint &endpoint) :
@@ -28,8 +30,23 @@ void chat_server::start() {
     do_accept();
 }
 
+void chat_server::stop() {
+    LOG(INFO) << "stopping the server...";
+    acceptor_.close();
+    manager_.stop_all();
+}
+
+
 void chat_server::do_accept() {
+#ifdef SHARED_PTR_DEBUG
+    chat_user_ptr new_connection = std::shared_ptr<chat_user>(new chat_user(io_service_, *this, manager_),
+        [](chat_user* u) {
+            LOG(INFO) << "DELETING user: " << u->name() << "!!!";
+            delete u;
+        });
+#else
     chat_user_ptr new_connection = std::make_shared<chat_user>(chat_user(io_service_, *this, manager_));
+#endif
 
     LOG(INFO) << "waiting for a new connection...";
 
@@ -57,7 +74,15 @@ chat_channel_ptr chat_server::create_channel(const std::string &id) {
         auto it = channels_.find(id);
 
         if(it == channels_.end()) {
+#ifdef SHARED_PTR_DEBUG
+            channels_[id] = std::shared_ptr<chat_channel>(new chat_channel(*this, manager_, id),
+                [](chat_channel* c) {
+                    LOG(INFO) << "DELETING channel: " << c->name() << "!!!";
+                    delete c;
+                });
+#else
             channels_[id] = std::make_shared<chat_channel>(chat_channel(*this, manager_, id));
+#endif
             return channels_[id];
         } else {
             LOG(WARNING) << "a channel with the name: " << id << " exists already!";
@@ -68,15 +93,24 @@ chat_channel_ptr chat_server::create_channel(const std::string &id) {
     return nullptr;
 }
 
+bool chat_server::remove_channel(chat_channel_ptr c) {
+    if(c) {
+        return remove_channel(c->name());
+    }
+
+    return false;
+}
+
 bool chat_server::remove_channel(const std::string &id) {
     if(!id.empty()) {
         auto it = channels_.find(id);
 
         if(it != channels_.end()) {
-            LOG(INFO) << "channel: " << id << " deleted!";
-
-            it->second->leave_all(); //make sure to remove all users from the channel
+            //it->second->leave_all(); //make sure to remove all users from the channel
+            //no need to call it here since it will be called only when last user leaves the channel 
             channels_.erase(it);
+
+            LOG(INFO) << "channel: " << id << " removed!";
         } else {
             LOG(WARNING) << "a channel with the name: " << id << " does not exist!";
             return false;
@@ -162,7 +196,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
     auto command = tokens[0];
     auto arguments = std::vector<std::string>(tokens.begin() + 1, tokens.end());
 
-    if(command == "/join") {
+    if(command == "/join" || command == "/j") {
         if(arguments.empty()) {
             //TODO send error msg to user
             return;
@@ -219,9 +253,4 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
     }
 
     LOG(WARNING) << "unknown command. (" << user->name() << "); " << msg;
-}
-
-void chat_server::stop() {
-    acceptor_.close();
-    manager_.stop_all();
 }

@@ -38,23 +38,23 @@ std::vector<std::string> chat_channel::user_list() const {
     return ret;
 }
 
-void chat_channel::join(chat_user_ptr c) {
-    LOG(INFO) << "user: " << c->name() << " joined: " << name_;
+void chat_channel::join(chat_user_ptr u) {
+    LOG(INFO) << "user: " << u->name() << " joined: " << name_;
 
-    c->channels_.insert(shared_from_this());
+    u->channels_.insert(shared_from_this());
 
-    users_.insert(c);
+    users_.insert(u);
 }
 
-void chat_channel::leave(chat_user_ptr c) {
-    LOG(INFO) << "user: " << c->name() << " left: " << name_;
+void chat_channel::leave(chat_user_ptr u) {
+    LOG(INFO) << "user: " << u->name() << " left: " << name_;
 
-    c->channels_.erase(shared_from_this());
+    u->channels_.erase(shared_from_this());
 
-    users_.erase(c);
+    users_.erase(u);
 
     if (users_.empty()) {
-        server_.remove_channel(name_);
+        server_.remove_channel(shared_from_this());
     }
 }
 
@@ -67,7 +67,7 @@ void chat_channel::leave_all() {
 
         users_.clear();
 
-        server_.remove_channel(name_);
+        server_.remove_channel(shared_from_this());
     }
 }
 

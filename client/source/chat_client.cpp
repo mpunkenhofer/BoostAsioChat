@@ -4,7 +4,7 @@
 
 #include "chat_client.h"
 
-#define ELPP_DISABLE_INFO_LOGS
+//#define ELPP_DISABLE_INFO_LOGS
 #include "easylogging++.h"
 
 chat_client::chat_client(boost::asio::io_service &io_service,
@@ -37,7 +37,10 @@ void chat_client::error_handler() {
 
 void chat_client::close() {
     io_service_.post([this](){
-        socket_.close();
+        if(socket_.is_open()) {
+            socket_.shutdown(socket_.shutdown_both);
+            socket_.close();
+        }
     });
 }
 
@@ -68,7 +71,11 @@ void chat_client::do_read_header() {
                                     inbound_data_.resize(inbound_data_size);
 
                                     do_read_message();
-                                } else {
+                                } 
+                                else if(ec == boost::asio::error::operation_aborted)
+                                    LOG(INFO) << "operation aborted.";
+                                else {
+                                    LOG(ERROR) << "Error: " << ec.message();
                                     error_handler();
                                 }
                             });
@@ -83,7 +90,11 @@ void chat_client::do_read_message() {
                                     print(deserialize_chat_message(inbound_data_));
 
                                     do_read_header();
-                                } else {
+                                } 
+                                else if(ec == boost::asio::error::operation_aborted)
+                                    LOG(INFO) << "operation aborted.";
+                                else {
+                                    LOG(ERROR) << "Error: " << ec.message();
                                     error_handler();
                                 }
                             });
@@ -101,6 +112,7 @@ void chat_client::do_write() {
                                          do_write();
 
                                  } else {
+                                     LOG(ERROR) << "Error: " << ec.message();
                                      error_handler();
                                  }
                              }));

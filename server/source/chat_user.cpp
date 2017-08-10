@@ -15,6 +15,8 @@
 #include "chat_channel.h"
 #include "chat_user_manager.h"
 
+#include <boost/asio/error.hpp>
+
 chat_user::chat_user(boost::asio::io_service &io_service, chat_server& server, chat_user_manager &cm) :
         io_service_(io_service),
         socket_(io_service),
@@ -39,12 +41,19 @@ void chat_user::start() {
 }
 
 void chat_user::stop() {
-    io_service_.post([this]() {
+    leave_all_channels();
 
-        leave_all_channels();
-
-        socket_.close();
-    });
+//    auto self(shared_from_this());
+//
+//    io_service_.post([this, self]() {
+//
+//        leave_all_channels();
+//
+//        if(socket_.is_open()) {
+//            socket_.shutdown(socket_.shutdown_both);
+//            socket_.close();
+//        }
+//    });
 }
 
 void chat_user::write(const chat_message &msg) {
@@ -76,6 +85,7 @@ void chat_user::do_read_header() {
 
                                     do_read_message();
                                 } else {
+                                    LOG(ERROR) << "Error: " << ec.message();
                                     manager_.stop(shared_from_this());
                                 }
                             });
@@ -92,6 +102,7 @@ void chat_user::do_read_message() {
 
                                     do_read_header();
                                 } else {
+                                    LOG(ERROR) << "Error: " << ec.message();
                                     manager_.stop(shared_from_this());
                                 }
                             });
@@ -111,6 +122,7 @@ void chat_user::do_write() {
                                          do_write();
 
                                  } else {
+                                     LOG(ERROR) << "Error: " << ec.message();
                                      manager_.stop(shared_from_this());
                                  }
                              });
@@ -144,8 +156,14 @@ bool chat_user::is_joined(chat_channel_ptr c) {
 }
 
 void chat_user::leave_all_channels() {
-    for (auto c : channels_)
+    LOG(INFO) << "User: " << name_ << " is leaving all channels.";
+
+    //make copy so the channel can safely remove itself from the users channel list
+    auto chans = channels_;
+
+    for (chat_channel_ptr c : chans)
         c->leave(shared_from_this());
-    
+
+    //channels_ ought to be empty here.
     channels_.clear();
 }

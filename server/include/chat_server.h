@@ -28,6 +28,7 @@ public:
     const boost::asio::ip::tcp::endpoint endpoint() const;
 
     bool remove_channel(const std::string &id);
+    bool remove_channel(chat_channel_ptr c);
 
     chat_channel_ptr create_channel(const std::string &id);
 
