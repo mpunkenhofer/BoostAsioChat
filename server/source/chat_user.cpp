@@ -168,6 +168,11 @@ void chat_user::ping() {
 std::string chat_user::name(const std::string &n) {
     if (!n.empty() && n.size() > 2) {
         LOG(INFO) << "user: " << name_ << " will be now known as: " << n;
+
+        for(auto c : channels_) {
+            c->publish(chat_message("server", c->name(), name_ + " is now known as " + n + "."));
+        }
+
         name_ = n;
     }
 
