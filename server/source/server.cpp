@@ -6,6 +6,7 @@
 #include <boost/asio.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
+#include <thread>
 
 #include "chat_server.h"
 #include "chat_channel.h"

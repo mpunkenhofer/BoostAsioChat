@@ -3,12 +3,16 @@ project(BoostAsioChat)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Wstrict-aliasing -pedantic -Wunreachable-code")
 
-add_definitions(-DELPP_THREAD_SAFE)
-
 #Source directories
 add_subdirectory(client)
 add_subdirectory(common)
 add_subdirectory(server)
+
+#Logging
+add_definitions(-DELPP_THREAD_SAFE)
+add_definitions(-DELPP_DISABLE_INFO_LOGS)
+add_definitions(-DELPP_DISABLE_WARNING_LOGS)
+#add_definitions(-DELPP_DISABLE_ERRORLOGS)
 
 set_target_properties(Server ChatServer
         PROPERTIES
