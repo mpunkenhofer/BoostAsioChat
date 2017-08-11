@@ -23,14 +23,12 @@ chat_user::chat_user(boost::asio::io_service &io_service, chat_server& server, c
         ping_timer_(io_service, boost::posix_time::seconds(ping_frequency_s_)),
         current_ping_retries_(0),
         server_(server),
-        manager_(cm) {
-    auto uuid = boost::uuids::random_generator()();
-
-    std::stringstream ss;
-    ss << uuid;
-
-    name_ = ss.str();
-
+        manager_(cm),
+        name_(chat_message::source_max_length, ' '){
+    //auto uuid = boost::uuids::random_generator()();
+    //std::stringstream ss;
+    //ss << uuid;
+    // = ss.str().substr(0, chat_message::source_max_length);
     //LOG(INFO) << "new user: " << name_;
 }
 
@@ -48,7 +46,14 @@ void chat_user::stop() {
     ping_timer_.cancel();
 }
 
-void chat_user::write(const chat_message &msg) {
+void chat_user::close_socket() {
+    if (socket_.is_open()) {
+        socket_.shutdown(socket_.shutdown_both);
+        socket_.close();
+    }
+}
+
+void chat_user::write(chat_message msg) {
     io_service_.post([this, msg]() {
         auto write_in_progress = !write_msgs_.empty();
         write_msgs_.push_back(msg);
@@ -90,15 +95,16 @@ void chat_user::do_read_message() {
                             [this, self](const boost::system::error_code &ec,
                                          std::size_t s __attribute__ ((unused))) {
                                 if (!ec) {
-                                    auto msg = deserialize_chat_message(inbound_data_);
-
-                                    if(msg.type() == chat_message_type::status && msg.content() == "pong") {
-                                        LOG(INFO) << name_ << ": received pong from client.";
-                                        pong_received_ = true;
+                                    try {
+                                        auto msg = deserialize_chat_message(inbound_data_);
+                                        if (msg.type() == chat_message_type::status && msg.content() == "pong") {
+                                            LOG(INFO) << name_ << ": received pong from client.";
+                                            pong_received_ = true;
+                                        } else
+                                            server_.handle_message(std::move(msg), shared_from_this());
+                                    } catch(const boost::archive::archive_exception& e) {
+                                        LOG(ERROR) << "Error: Failed to decode msg: " << e.what();
                                     }
-                                    else
-                                        server_.handle_message(std::move(msg), shared_from_this());
-
                                     do_read_header();
                                 } else {
                                     LOG(ERROR) << "Error: " << ec.message();
@@ -130,7 +136,7 @@ void chat_user::do_write() {
 void chat_user::ping() {
     LOG(INFO) << "Sending client(" << name_ << ") a ping.";
 
-    write(chat_message("server", name_.substr(chat_message::target_max_length), "ping", chat_message_type::status));
+    write(chat_message("server", name_, "ping", chat_message_type::status));
 
     auto self(shared_from_this());
 
@@ -143,7 +149,7 @@ void chat_user::ping() {
                 ping();
             } else if (current_ping_retries_ < ping_retry_max_) {
                 current_ping_retries_++;
-                ping_timer_.expires_at(ping_timer_.expires_at() + boost::posix_time::seconds(ping_frequency_s_));
+                ping_timer_.expires_at(ping_timer_.expires_at() + boost::posix_time::seconds(ping_frequency_s_ / 2));
 
                 LOG(INFO) << "Ping retry " << std::to_string(current_ping_retries_)
                           << " of " << std::to_string(ping_retry_max_) << ".";
@@ -153,11 +159,7 @@ void chat_user::ping() {
                 LOG(INFO) << name_ << ": Ping Timeout!";
 
                 leave_all_channels();
-
-                if (socket_.is_open()) {
-                    socket_.shutdown(socket_.shutdown_both);
-                    socket_.close();
-                }
+                close_socket();
             }
         }
     });
@@ -170,6 +172,10 @@ std::string chat_user::name(const std::string &n) {
     }
 
     return name_;
+}
+
+char* chat_user::name_data() {
+    return &name_[0];
 }
 
 std::vector<std::string> chat_user::joined_channels() const {
@@ -202,3 +208,5 @@ void chat_user::leave_all_channels() {
     //channels_ ought to be empty here.
     channels_.clear();
 }
+
+

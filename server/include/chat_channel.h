@@ -24,7 +24,7 @@ class chat_channel : public std::enable_shared_from_this<chat_channel> {
 public:
     chat_channel(chat_server &server, chat_user_manager &manager, const std::string &name);
 
-    void publish(const chat_message &msg);
+    void publish(chat_message);
 
     std::string name() const;
 

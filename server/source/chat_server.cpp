@@ -57,8 +57,38 @@ void chat_server::do_accept() {
             return;
 
         if (!ec) {
-            LOG(INFO) << "accepted new connection.";
-            manager_.start(new_connection);
+            LOG(INFO) << "new connection ... get nickname";
+
+            boost::asio::async_read(new_connection->socket(),
+                                    boost::asio::buffer(nick_buffer_, nick_buffer_.size()),
+                                    [this, new_connection](const boost::system::error_code &ec,
+                                                           std::size_t s __attribute__((unused))) {
+                                        if(!ec) {
+                                            std::string name(nick_buffer_.begin(), nick_buffer_.begin() +
+                                                    std::min(std::strlen(nick_buffer_.begin()), nick_buffer_.size()));
+                                            if(valid_id(name)) {
+                                                LOG(INFO) << name << " is a valid name.";
+                                                new_connection->name(name);
+                                                new_connection->write(chat_message("server",
+                                                                                   name,
+                                                                                   "valid",
+                                                                                   chat_message_type::status));
+                                                manager_.start(new_connection);
+                                            }
+                                            else {
+                                                LOG(INFO) << name << " is not valid!";
+                                                new_connection->write(chat_message("server",
+                                                                                   "target",
+                                                                                   name +
+                                                                                           " is not a valid name.",
+                                                                                   chat_message_type::status));
+                                                io_service_.post([new_connection](){ new_connection->close_socket(); });
+                                            }
+                                        } else {
+                                            LOG(ERROR) << "Error: " << ec.message();
+                                            new_connection->close_socket();
+                                        }
+                                    });
         }
 
         do_accept();
@@ -146,11 +176,19 @@ chat_user_ptr chat_server::user(const std::string &id) {
     return manager_.user(id);
 }
 
-bool chat_server::unused_id(const std::string &id) const {
+bool chat_server::valid_id(const std::string &id) const {
+    if(id.empty())
+        return false;
+    
+    auto it = std::find_if(id.begin(), id.end(), [](const char c) -> bool { return !isalnum(c); });
+    
+    if(!isalpha(id[0]) || it != id.end())
+        return false;
+    
     auto channel = channels_.find(id);
     auto user = manager_.user_exists(id);
 
-    return (user || (channel != channels_.end())) ? false : true;
+    return (user || (channel != channels_.end()) || id.size() < 3) ? false : true;
 }
 
 void chat_server::handle_message(chat_message msg, chat_user_ptr user) {
@@ -163,24 +201,23 @@ void chat_server::handle_message(chat_message msg, chat_user_ptr user) {
         auto chan = channel(target);
 
         if(chan && user->is_joined(chan)) {
-            chan->publish(
-                    chat_message(user->name().substr(0,std::min(user->name().size(), std::size_t(20))),
-                                 target,
-                                 msg.content()));
+            chan->publish(chat_message(user->name(), target, msg.content()));
             return;
         }
 
         auto tell_target = manager_.user(target);
 
         if(tell_target) {
-            tell_target->write(chat_message(user->name().substr(0,std::min(user->name().size(), std::size_t(20))),
-                                            target,
-                                            msg.content()));
+            tell_target->write(chat_message(user->name(), target, msg.content()));
             return;
         }
 
-        //TODO send user error msg
         LOG(WARNING) << "invalid target: " << target << "; no such channel or user!";
+
+        user->write(chat_message("server",
+                                 user->name(),
+                                 "No channel or user with the name: " + target,
+                                 chat_message_type::status));
     }
 }
 
@@ -207,7 +244,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
 
         if(chan)
             chan->join(user);
-        else if(unused_id(arg)) {
+        else if(valid_id(arg)) {
             auto created_chan = create_channel(arg);
             created_chan->join(user);
         }
@@ -242,7 +279,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
 
         auto arg = arguments[0];
 
-        if(unused_id(arg))
+        if(valid_id(arg))
             user->name(arg);
         else {
             // TODO send user error msg

@@ -18,6 +18,8 @@ class chat_client {
 public:
     chat_client(boost::asio::io_service &io_service, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 
+    bool connect(const std::string&);
+
     void write(chat_message &msg);
     void close();
 private:
@@ -31,6 +33,8 @@ private:
     std::array<char, chat_message::header_length> inbound_header_;
     std::vector<char> inbound_data_;
 
+    boost::asio::ip::tcp::resolver::iterator endpoint_;
+    
     void do_connect(boost::asio::ip::tcp::resolver::iterator e);
     void do_read_header();
     void do_read_message();

@@ -34,11 +34,23 @@ int main(int argc, char **argv) {
 
         chat_client client(io_service, endpoint_iterator);
 
+        std::cout << "In order to successfully connect to the server you have to pick a vaild nick name.\n";
+
+        std::string nick("");
+        do {
+            std::cout << "Nickname: ";
+            std::cin >> nick;
+        }
+        while(!client.connect(nick));
+
         std::thread t([&io_service] { io_service.run(); });
 
         std::cout << "To change the target you are talking to: /t <target>\n";
         std::string active_target("");
         char line[chat_message::content_max_length + 1];
+
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        //std::cin.clear();
 
         while (std::cin.getline(line, chat_message::content_max_length + 1)) {
             if (std::strcmp(line, "/quit") == 0 || std::strcmp(line, "/q") == 0)
@@ -55,10 +67,10 @@ int main(int argc, char **argv) {
                     std::cout << "Currently talking to: " << active_target << '\n';
                 }
             } else if (line[0] == '/') {
-                chat_message msg("source", active_target, std::string(line, line + std::strlen(line)), chat_message_type::command);
+                chat_message msg(nick, active_target, std::string(line, line + std::strlen(line)), chat_message_type::command);
                 client.write(msg);
             } else {
-                chat_message msg("source", active_target, std::string(line, line + std::strlen(line)));
+                chat_message msg(nick, active_target, std::string(line, line + std::strlen(line)));
                 client.write(msg);
             }
         }

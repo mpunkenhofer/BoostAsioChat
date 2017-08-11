@@ -32,14 +32,16 @@ public:
 
     void stop();
 
-    void write(const chat_message &msg);
+    void write(chat_message msg);
 
     std::string name(const std::string &n = std::string(""));
+    char* name_data();
 
     std::vector<std::string> joined_channels() const;
     bool is_joined(chat_channel_ptr c);
 
     boost::asio::ip::tcp::socket &socket();
+    void close_socket();
 
     void leave_all_channels();
     
@@ -48,9 +50,11 @@ private:
     boost::asio::ip::tcp::socket socket_;
 
     boost::asio::deadline_timer ping_timer_;
+    std::size_t current_ping_retries_;
+    bool pong_received_ = false;
+
     static const std::size_t ping_frequency_s_ = 30;
     static const std::size_t ping_retry_max_ = 3;
-    std::size_t current_ping_retries_;
 
     chat_server& server_;
     chat_user_manager& manager_;
@@ -64,8 +68,6 @@ private:
 
     std::array<char, chat_message::header_length> inbound_header_;
     std::vector<char> inbound_data_;
-
-    bool pong_received_ = false;
 
     void do_read_header();
 

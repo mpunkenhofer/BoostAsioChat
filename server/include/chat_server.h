@@ -40,10 +40,11 @@ public:
 
     void handle_message(chat_message msg, chat_user_ptr user);
 
-    bool unused_id(const std::string& id) const;
+    bool valid_id(const std::string &id) const;
 private:
     boost::asio::io_service &io_service_;
     boost::asio::ip::tcp::acceptor acceptor_;
+    std::array<char, chat_message::source_max_length> nick_buffer_;
 
     chat_user_manager manager_;
 
