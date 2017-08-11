@@ -170,7 +170,10 @@ std::string chat_user::name(const std::string &n) {
         LOG(INFO) << "user: " << name_ << " will be now known as: " << n;
 
         for(auto c : channels_) {
-            c->publish(chat_message("server", c->name(), name_ + " is now known as " + n + "."));
+            c->publish(chat_message("server",
+                                    c->name(),
+                                    name_ + " is now known as " + n + ".",
+                                    chat_message_type::status));
         }
 
         name_ = n;

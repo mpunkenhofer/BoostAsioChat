@@ -235,7 +235,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
 
     if(command == "/join" || command == "/j") {
         if(arguments.empty()) {
-            //TODO send error msg to user
+            user->write(chat_message("server", user->name(), "Arguments empty.", chat_message_type::status));
             return;
         }
 
@@ -254,7 +254,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
 
     if(command == "/leave") {
         if(arguments.empty()) {
-            //TODO send error msg to user
+            user->write(chat_message("server", user->name(), "Arguments empty.", chat_message_type::status));
             return;
         }
 
@@ -273,7 +273,7 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
 
     if(command == "/nick") {
         if(arguments.empty()) {
-            //TODO send error msg to user
+            user->write(chat_message("server", user->name(), "Arguments empty.", chat_message_type::status));
             return;
         }
 
@@ -282,12 +282,13 @@ void chat_server::do_command(const chat_message &msg, chat_user_ptr user) {
         if(valid_id(arg))
             user->name(arg);
         else {
-            // TODO send user error msg
             LOG(WARNING) << "id: " << arg << " already in use!";
+            user->write(chat_message("server", user->name(), "Name is not valid.", chat_message_type::status));
         }
 
         return;
     }
 
     LOG(WARNING) << "unknown command. (" << user->name() << "); " << msg;
+    user->write(chat_message("server", user->name(), " unknown command.", chat_message_type::status));
 }
