@@ -5,7 +5,7 @@
 #include <iostream>
 #include "chat_channel.h"
 
-#include "easylogging++.h"
+#include "easylogging.h"
 
 #include "chat_user.h"
 #include "chat_server.h"
@@ -20,7 +20,7 @@ chat_channel::chat_channel(chat_server &server, chat_user_manager &manager, cons
 void chat_channel::publish(chat_message msg) {
     LOG(INFO) << "channel: " << name_ << " | publish: " << msg;
 
-    for (auto u : users_)
+    for (const auto& u : users_)
         u->write(msg);
 }
 

@@ -8,10 +8,8 @@
 #include <boost/algorithm/string.hpp>
 #include <thread>
 
-#include "chat_message.h"
-
 //#define ELPP_DISABLE_INFO_LOGS
-#include "easylogging++.h"
+#include "easylogging.h"
 INITIALIZE_EASYLOGGINGPP
 
 void init_logger();
@@ -36,7 +34,7 @@ int main(int argc, char **argv) {
 
         std::cout << "In order to successfully connect to the server you have to pick a vaild nick name.\n";
 
-        std::string nick("");
+        std::string nick;
         do {
             std::cout << "Nickname: ";
             std::cin >> nick;
@@ -46,17 +44,18 @@ int main(int argc, char **argv) {
         std::thread t([&io_service] { io_service.run(); });
 
         std::cout << "To change the target you are talking to: /t <target>\n";
-        std::string active_target("");
+        std::string active_target;
         char line[chat_message::content_max_length + 1];
 
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         //std::cin.clear();
 
-        while (std::cin.getline(line, chat_message::content_max_length + 1)) {
+        while (std::cin.getline(line, chat_message::content_max_length + 1).good()) {
             if (std::strcmp(line, "/quit") == 0 || std::strcmp(line, "/q") == 0)
                 break;
-            else if (std::strncmp(line, "/target", std::strlen("/target")) == 0 ||
-                     std::strncmp(line, "/t", std::strlen("/t")) == 0) {
+
+            if (std::strncmp(line, "/target", std::strlen("/target")) == 0 ||
+                    std::strncmp(line, "/t", std::strlen("/t")) == 0) {
                 std::vector<std::string> tokens;
                 boost::split(tokens, line, boost::is_any_of("\t "));
 

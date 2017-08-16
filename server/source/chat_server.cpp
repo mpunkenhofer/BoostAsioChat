@@ -8,9 +8,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "chat_channel.h"
-#include "chat_message.h"
 
-#include "easylogging++.h"
+#include "easylogging.h"
 
 #define SHARED_PTR_DEBUG
 
@@ -18,8 +17,7 @@ using boost::asio::ip::tcp;
 
 chat_server::chat_server(boost::asio::io_service &io_service, const tcp::endpoint &endpoint) :
         io_service_(io_service),
-        acceptor_(io_service, endpoint),
-        manager_() {
+        acceptor_(io_service, endpoint) {
 
 }
 
@@ -61,9 +59,9 @@ void chat_server::do_accept() {
 
             boost::asio::async_read(new_connection->socket(),
                                     boost::asio::buffer(nick_buffer_, nick_buffer_.size()),
-                                    [this, new_connection](const boost::system::error_code &ec,
+                                    [this, new_connection](const boost::system::error_code &read_ec,
                                                            std::size_t s __attribute__((unused))) {
-                                        if(!ec) {
+                                        if(!read_ec) {
                                             std::string name(nick_buffer_.begin(), nick_buffer_.begin() +
                                                     std::min(std::strlen(nick_buffer_.begin()), nick_buffer_.size()));
                                             if(valid_id(name)) {
@@ -85,7 +83,7 @@ void chat_server::do_accept() {
                                                 io_service_.post([new_connection](){ new_connection->close_socket(); });
                                             }
                                         } else {
-                                            LOG(ERROR) << "Error: " << ec.message();
+                                            LOG(ERROR) << "Error: " << read_ec.message();
                                             new_connection->close_socket();
                                         }
                                     });
@@ -114,10 +112,10 @@ chat_channel_ptr chat_server::create_channel(const std::string &id) {
             channels_[id] = std::make_shared<chat_channel>(chat_channel(*this, manager_, id));
 #endif
             return channels_[id];
-        } else {
-            LOG(WARNING) << "a channel with the name: " << id << " exists already!";
-            return nullptr;
         }
+        
+        LOG(WARNING) << "a channel with the name: " << id << " exists already!";
+        return nullptr;
     }
 
     return nullptr;
@@ -180,15 +178,15 @@ bool chat_server::valid_id(const std::string &id) const {
     if(id.empty())
         return false;
     
-    auto it = std::find_if(id.begin(), id.end(), [](const char c) -> bool { return !isalnum(c); });
+    auto it = std::find_if(id.begin(), id.end(), [](const char c) -> bool { return !static_cast<bool>(isalnum(c)); });
     
-    if(!isalpha(id[0]) || it != id.end())
+    if(!static_cast<bool>(isalpha(id[0])) || it != id.end())
         return false;
     
     auto channel = channels_.find(id);
     auto user = manager_.user_exists(id);
 
-    return (user || (channel != channels_.end()) || id.size() < 3) ? false : true;
+    return !(user || (channel != channels_.end()) || id.size() < 3);
 }
 
 void chat_server::handle_message(chat_message msg, chat_user_ptr user) {

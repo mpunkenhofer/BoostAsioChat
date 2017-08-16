@@ -4,11 +4,7 @@
 
 #include "chat_user_manager.h"
 
-#include "easylogging++.h"
-
-chat_user_manager::chat_user_manager() {
-
-}
+#include "easylogging.h"
 
 void chat_user_manager::start(chat_user_ptr u) {
     LOG(INFO) << "added connection to manager.";
@@ -35,10 +31,7 @@ chat_user_ptr chat_user_manager::user(const std::string &name) {
         return usr->name() == name;
     });
 
-    if (it != connections_.end())
-        return *it;
-    else
-        return nullptr;
+    return (it != connections_.end()) ? *it : nullptr;
 }
 
 bool chat_user_manager::user_exists(const std::string &name) const {
@@ -46,7 +39,7 @@ bool chat_user_manager::user_exists(const std::string &name) const {
         return usr->name() == name;
     });
 
-    return (it != connections_.end()) ? true : false;
+    return it != connections_.end();
 }
 
 std::vector<std::string> chat_user_manager::user_list() const {

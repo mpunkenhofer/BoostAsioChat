@@ -7,14 +7,14 @@
 #include "chat_client.h"
 
 //#define ELPP_DISABLE_INFO_LOGS
-#include "easylogging++.h"
+#include "easylogging.h"
 
 chat_client::chat_client(boost::asio::io_service &io_service,
                          boost::asio::ip::tcp::resolver::iterator endpoint_iterator) :
         io_service_(io_service),
         socket_(io_service),
         write_strand_(io_service),
-        endpoint_(endpoint_iterator){
+        endpoint_(std::move(endpoint_iterator)){
     //do_connect(endpoint_iterator);
 }
 
@@ -30,7 +30,7 @@ void chat_client::close() {
 void chat_client::write(chat_message &msg) {
     io_service_.post(write_strand_.wrap([this, msg]() {
         auto write_in_progress = !write_msgs_.empty();
-        write_msgs_.push_back(std::move(msg));
+        write_msgs_.push_back(msg);
 
         if (!write_in_progress)
             do_write();
@@ -66,7 +66,9 @@ bool chat_client::connect(const std::string& nickname) {
         if(msg.type() == chat_message_type::status && msg.content() == "valid") {
             do_read_header(); //start
             return true;
-        } else if(msg.type() == chat_message_type::status){
+        }
+
+        if(msg.type() == chat_message_type::status){
             std::cout << "Server: " << msg.content() << '\n';
         }
     } catch(const std::exception& e) {
@@ -76,16 +78,16 @@ bool chat_client::connect(const std::string& nickname) {
     return false;
 }
 
-void chat_client::do_connect(boost::asio::ip::tcp::resolver::iterator endpoint) {
-    LOG(INFO) << "connect to server...";
-
-    boost::asio::async_connect(socket_,
-                               endpoint,
-                               [this](const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::iterator) {
-                                   if (!ec)
-                                       do_read_header();
-                               });
-}
+//void chat_client::do_connect(boost::asio::ip::tcp::resolver::iterator endpoint) {
+//    LOG(INFO) << "connect to server...";
+//
+//    boost::asio::async_connect(socket_,
+//                               endpoint,
+//                               [this](const boost::system::error_code &ec, boost::asio::ip::tcp::resolver::iterator) {
+//                                   if (!ec)
+//                                       do_read_header();
+//                               });
+//}
 
 void chat_client::do_read_header() {
     LOG(INFO) << "waiting for a msg...";
@@ -157,9 +159,9 @@ void chat_client::handle_message(chat_message msg) {
     else if(msg.type() == chat_message_type::status && msg.content() == "ping") {
         LOG(INFO) << "server sent a ping ... replaying with a pong.";
 
-        chat_message msg("source", "server", "pong", chat_message_type::status);
+        chat_message pong("source", "server", "pong", chat_message_type::status);
 
-        write(msg);
+        write(pong);
     }
     else if(msg.type() == chat_message_type::status) {
         std::cout << "Server: " << msg.content() << '\n';

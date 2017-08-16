@@ -5,7 +5,7 @@
 #include <boost/asio.hpp>
 #include "chat_session.h"
 
-#include "easylogging++.h"
+#include "easylogging.h"
 
 chat_session::chat_session(boost::asio::io_service& io_service,
                            std::function<void(const chat_message& msg, chat_session_ptr)> message_handler,

@@ -12,8 +12,6 @@ int to_int(chat_message_type t) {
         case chat_message_type::status: return 2;
         case chat_message_type::unknown: return 3;
     }
-
-    return -1;
 }
 
 std::string to_string(chat_message_type t) {

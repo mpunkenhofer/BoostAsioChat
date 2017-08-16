@@ -35,7 +35,7 @@ private:
 
     boost::asio::ip::tcp::resolver::iterator endpoint_;
     
-    void do_connect(boost::asio::ip::tcp::resolver::iterator e);
+    //void do_connect(boost::asio::ip::tcp::resolver::iterator e);
     void do_read_header();
     void do_read_message();
     void do_write();

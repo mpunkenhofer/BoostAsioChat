@@ -5,18 +5,24 @@
 #include <sstream>
 #include "chat_message.h"
 
+constexpr std::size_t chat_message::source_max_length;
+constexpr std::size_t chat_message::target_max_length;
+constexpr std::size_t chat_message::content_max_length;
+
 chat_message::chat_message() : type_(chat_message_type::unknown), buffers_cached_(false) {
 
 }
 
 chat_message::chat_message(const std::string &source, const std::string &target, const std::string &content,
                            chat_message_type t) : type_(t), buffers_cached_(false) {
-    if(source.size() > source_max_length || target.size() > target_max_length || content.size() > content_max_length)
-        throw std::runtime_error("chat message: content, source or target over character limit!");
 
-    source_ = source;
-    target_ = target;
-    content_ = content;
+    auto truncate = [this](const std::string& s, const std::size_t& size) {
+        return s.size() > size ? std::string{s.substr(0, std::min(size, s.size()))} : s;
+    };
+
+    source_ = truncate(source, source_max_length);
+    target_ = truncate(target, target_max_length);
+    content_ = truncate(content, content_max_length);
 }
 
 chat_message_type chat_message::type() const {
@@ -36,27 +42,24 @@ std::string chat_message::content() const {
 }
 
 void chat_message::set_target(std::string t) {
-    if(t.size() > target_max_length)
-        throw std::runtime_error("chat_message::set_target(t): target max len: " + std::to_string(target_max_length));
-
     buffers_cached_ = false;
-    target_ = std::move(t);
+
+    target_ = t.size() > target_max_length ? std::string{t.substr(0, std::min(target_max_length, t.size()))} :
+              std::move(t);
 }
 
 void chat_message::set_source(std::string s) {
-    if(s.size() > source_max_length)
-        throw std::runtime_error("chat_message::set_source(s): source max len: " + std::to_string(source_max_length));
-
     buffers_cached_ = false;
-    source_ = std::move(s);
+
+    source_ = s.size() > target_max_length ? std::string{s.substr(0, std::min(source_max_length, s.size()))} :
+              std::move(s);
 }
 
 void chat_message::set_content(std::string c) {
-    if(c.size() > content_max_length)
-        throw std::runtime_error("chat_message::set_content(c): content max len: " + std::to_string(content_max_length));
-
     buffers_cached_ = false;
-    content_ = std::move(c);
+
+    content_ = c.size() > target_max_length ? std::string{c.substr(0, std::min(source_max_length, c.size()))} :
+              std::move(c);
 }
 
 std::vector<boost::asio::const_buffer> chat_message::generate_buffers() {
@@ -87,7 +90,7 @@ std::vector<boost::asio::const_buffer> chat_message::generate_buffers() {
 }
 
 std::ostream &operator<<(std::ostream &os, const chat_message &msg) {
-    if (os) {
+    if (os.good()) {
         os << "Type: " << to_string(msg.type())
            << " | Source: " << msg.source()
            << " | Target: " << msg.target()

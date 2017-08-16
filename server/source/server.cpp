@@ -11,7 +11,7 @@
 #include "chat_server.h"
 #include "chat_channel.h"
 
-#include "easylogging++.h"
+#include "easylogging.h"
 INITIALIZE_EASYLOGGINGPP
 
 void init_logger();
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     try {
         boost::asio::io_service io_service;
 
-        unsigned short port = static_cast<unsigned short>(std::atoi(argv[1]));
+        auto port = static_cast<unsigned short>(std::atoi(argv[1]));
         boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 
         chat_server server(io_service, endpoint);
@@ -37,10 +37,11 @@ int main(int argc, char **argv) {
 
         std::string s;
 
-        while(std::getline(std::cin, s)) {
+        while(std::getline(std::cin, s).good()) {
             if(s == "/q" || s == "/quit")
                 break;
-            else if(s == "/users") {
+
+            if(s == "/users") {
                 auto users = server.user_list();
 
                 if(users.empty())
@@ -53,7 +54,8 @@ int main(int argc, char **argv) {
 
                 continue;
             }
-            else if(std::strncmp(s.c_str(), "/u", std::strlen("/u")) == 0 ||
+
+            if(std::strncmp(s.c_str(), "/u", std::strlen("/u")) == 0 ||
                     std::strncmp(s.c_str(), "/user", std::strlen("/user")) == 0) {
                 std::vector<std::string> tokens;
                 boost::split(tokens, s, boost::is_any_of("\t "));
@@ -79,7 +81,8 @@ int main(int argc, char **argv) {
 
                 continue;
             }
-            else if(s == "/channels") {
+
+            if(s == "/channels") {
                 auto chans = server.channel_list();
 
                 if(chans.empty())
@@ -93,7 +96,8 @@ int main(int argc, char **argv) {
 
                 continue;
             }
-            else if(std::strncmp(s.c_str(), "/c", std::strlen("/c")) == 0 ||
+
+            if(std::strncmp(s.c_str(), "/c", std::strlen("/c")) == 0 ||
                     std::strncmp(s.c_str(), "/channel", std::strlen("/channel")) == 0) {
                 std::vector<std::string> tokens;
                 boost::split(tokens, s, boost::is_any_of("\t "));

@@ -11,11 +11,17 @@
 
 class chat_user_manager {
 public:
-    chat_user_manager();
+    chat_user_manager() = default;
+
+    ~chat_user_manager() = default;
 
     chat_user_manager(const chat_user_manager &) = delete;
 
     chat_user_manager &operator=(const chat_user_manager &) = delete;
+
+    chat_user_manager(chat_user_manager&&) = delete;
+
+    chat_user_manager& operator=(chat_user_manager&&) = delete;
 
     void start(chat_user_ptr c);
 

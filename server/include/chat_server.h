@@ -18,7 +18,7 @@ using chat_channel_ptr = std::shared_ptr<chat_channel>;
 
 class chat_server {
 public:
-    chat_server(boost::asio::io_service &io_service,
+    explicit chat_server(boost::asio::io_service &io_service,
                 const boost::asio::ip::tcp::endpoint &endpoint =
                 boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 666));
 

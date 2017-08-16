@@ -5,17 +5,12 @@
 #include "chat_user.h"
 
 #include <iostream>
-#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
-#include "easylogging++.h"
+#include "easylogging.h"
 
 #include "chat_server.h"
 #include "chat_channel.h"
-#include "chat_user_manager.h"
-
-#include <boost/asio/error.hpp>
 
 chat_user::chat_user(boost::asio::io_service &io_service, chat_server& server, chat_user_manager &cm) :
         io_service_(io_service),
@@ -169,7 +164,7 @@ std::string chat_user::name(const std::string &n) {
     if (!n.empty() && n.size() > 2) {
         LOG(INFO) << "user: " << name_ << " will be now known as: " << n;
 
-        for(auto c : channels_) {
+        for(const auto& c : channels_) {
             c->publish(chat_message("server",
                                     c->name(),
                                     name_ + " is now known as " + n + ".",
